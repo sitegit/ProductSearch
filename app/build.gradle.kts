@@ -64,7 +64,7 @@ dependencies {
 
     implementation("androidx.navigation:navigation-compose:2.7.7")
 
-    implementation("io.coil-kt:coil-compose:2.5.0")
+    implementation("com.github.bumptech.glide:compose:1.0.0-beta01")
 
     implementation("androidx.core:core-ktx:1.12.0")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
