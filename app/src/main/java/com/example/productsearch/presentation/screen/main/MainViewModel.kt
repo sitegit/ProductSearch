@@ -1,55 +1,65 @@
 package com.example.productsearch.presentation.screen.main
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.bumptech.glide.Glide.init
-import com.example.productsearch.data.network.dto.ProductResponseDto
 import com.example.productsearch.domain.GetProductsUseCase
+import com.example.productsearch.domain.LoadNextDataUseCase
 import com.example.productsearch.domain.entity.Product
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.merge
+import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 class MainViewModel @Inject constructor(
-    private val getProductsUseCase: GetProductsUseCase
+    private val getProductsUseCase: GetProductsUseCase,
+    private val loadNextDataUseCase: LoadNextDataUseCase
 ) : ViewModel() {
 
-    private val products = mutableStateListOf<Product>()
-    private var page by mutableIntStateOf(20)
-    val canPaginate by mutableStateOf(false)
+    private var totalItems = 0
+    private var currentPage = 0
+    private val loadNextDataFlow = MutableSharedFlow<ProductState>()
 
-    var state by mutableStateOf<ProductState>(ProductState.Initial)
+    private val productsFlow: StateFlow<List<Product>> = getProductsUseCase().map {
+        totalItems = it.total
+        currentPage = it.skip
+        it.data
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(),
+        initialValue = emptyList()
+    )
 
-    init {
-        getProducts()
-    }
+    val screenState = productsFlow
+        .filter { it.isNotEmpty() }
+        .map {
+            ProductState.Products(it) as ProductState }
+        .onStart {
+            emit(ProductState.Loading)
+        }.mergeWith(loadNextDataFlow)
 
-    fun getProducts() {
+    fun loadNextProducts() {
+        if (currentPage == totalItems) return
         viewModelScope.launch {
-            if (page == 0 || (page != 0 && canPaginate) && state == ProductState.Initial) {
-                state = if (page == 0) ProductState.Loading else ProductState.Paginating
-
-                getProductsUseCase(page).collect {
-
-                }
-            }
+            loadNextDataFlow.emit(
+                ProductState.Products(
+                    products = productsFlow.value,
+                    nextDataIsLoading = true
+                )
+            )
+            loadNextDataUseCase()
         }
     }
 
-
-
-
-
-
-
-
-
-
+    private fun <T> Flow<T>.mergeWith(another: Flow<T>): Flow<T> {
+        return merge(this, another)
+    }
 }
