@@ -1,6 +1,6 @@
-package com.example.productsearch.data
+package com.example.productsearch.domain.entity
 
-data class ProductDto(
+data class Product(
     val id: Int,
     val title: String,
     val description: String,

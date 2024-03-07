@@ -1,4 +1,4 @@
-package com.example.productsearch.data
+package com.example.productsearch.data.network
 
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor

@@ -1,8 +1,9 @@
 package com.example.productsearch.domain
 
-import com.example.productsearch.data.ProductResponseDto
+import com.example.productsearch.domain.entity.Product
+import kotlinx.coroutines.flow.Flow
 
 interface ProductsRepository {
 
-    suspend fun getProducts(): ProductResponseDto
+    fun getProducts(page: Int): Flow<List<Product>>
 }

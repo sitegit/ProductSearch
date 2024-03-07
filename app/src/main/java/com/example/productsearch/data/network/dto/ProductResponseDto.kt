@@ -1,4 +1,4 @@
-package com.example.productsearch.data
+package com.example.productsearch.data.network.dto
 
 data class ProductResponseDto(
     val products: List<ProductDto>,

@@ -1,7 +1,7 @@
 package com.example.productsearch.di
 
-import com.example.productsearch.data.ApiFactory
-import com.example.productsearch.data.ApiService
+import com.example.productsearch.data.network.ApiFactory
+import com.example.productsearch.data.network.ApiService
 import com.example.productsearch.data.ProductsRepositoryImpl
 import com.example.productsearch.domain.ProductsRepository
 import dagger.Binds
