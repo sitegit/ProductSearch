@@ -1,5 +1,6 @@
-package com.example.productsearch.domain
+package com.example.productsearch.domain.usecase
 
+import com.example.productsearch.domain.ProductsRepository
 import javax.inject.Inject
 
 class LoadNextDataUseCase @Inject constructor(

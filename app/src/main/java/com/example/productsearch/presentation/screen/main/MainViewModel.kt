@@ -1,12 +1,12 @@
 package com.example.productsearch.presentation.screen.main
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.productsearch.domain.GetProductsUseCase
-import com.example.productsearch.domain.LoadNextDataUseCase
 import com.example.productsearch.domain.Result
 import com.example.productsearch.domain.entity.Product
+import com.example.productsearch.domain.entity.ProductList
+import com.example.productsearch.domain.usecase.GetProductsUseCase
+import com.example.productsearch.domain.usecase.LoadNextDataUseCase
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -43,7 +43,6 @@ class MainViewModel @Inject constructor(
                     ProductState.Loading
                 }
                 is Result.Error -> {
-                    Log.i("MyTag", "error")
                     _toastEvents.emit(it.exception.message.toString())
                     _errorState.value = true
                     if (list.isNotEmpty()) {
@@ -52,11 +51,11 @@ class MainViewModel @Inject constructor(
                         ProductState.Error
                     }
                 }
-                is Result.Success -> {
-                    Log.i("MyTag", "success")
-                    totalItems = it.productList.total
-                    currentPage = it.productList.skip
-                    val products = it.productList.products
+                is Result.Success<*> -> {
+                    val data = it.data as ProductList
+                    totalItems = data.total
+                    currentPage = data.skip
+                    val products = data.products
                     list.addAll(products)
                     _errorState.value = false
                     ProductState.Products(products)
@@ -66,9 +65,7 @@ class MainViewModel @Inject constructor(
         .mergeWith(loadNextDataFlow)
 
     fun loadNextProducts() {
-
         if (currentPage == totalItems && list.isNotEmpty()) return
-        Log.i("MyTag", "loadNextProducts()")
 
         viewModelScope.launch {
             loadNextDataFlow.emit(

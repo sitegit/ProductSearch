@@ -1,6 +1,7 @@
 package com.example.productsearch.presentation.screen.main
 
 import android.widget.Toast
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,15 +13,12 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -31,10 +29,10 @@ import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -44,9 +42,12 @@ import com.bumptech.glide.integration.compose.GlideImage
 import com.example.productsearch.domain.entity.Product
 import com.example.productsearch.getApplicationComponent
 import com.example.productsearch.presentation.ui.theme.LightGrey
+import com.example.productsearch.presentation.ui.theme.RetryLoadDataButton
 
 @Composable
-fun MainScreen() {
+fun MainScreen(
+    onClickedCard: (Int) -> Unit,
+) {
     val component = getApplicationComponent()
     val viewModel: MainViewModel = viewModel(factory = component.getViewModelFactory())
     val state = viewModel.screenState.collectAsState(ProductState.Initial)
@@ -62,23 +63,11 @@ fun MainScreen() {
     when (val currentState = state.value) {
         ProductState.Initial -> {}
         ProductState.Loading -> {
-            if (isError) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "Не удалось загрузить данные",
-                        textAlign = TextAlign.Center
-                    )
-                }
-            } else {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator(color = Color.DarkGray)
-                }
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(color = Color.DarkGray)
             }
         }
         is ProductState.Products -> {
@@ -86,6 +75,7 @@ fun MainScreen() {
                 items = { currentState.products },
                 nextDataIsLoading = currentState.nextDataIsLoading,
                 isError = isError,
+                onClickedCard = { onClickedCard(it) },
                 onLoadNextData = { viewModel.loadNextProducts() }
             )
         }
@@ -95,13 +85,7 @@ fun MainScreen() {
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
             ) {
-                Button(
-                    modifier = Modifier.wrapContentSize(),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.DarkGray),
-                    onClick = { viewModel.loadNextProducts() }
-                ) {
-                    Text(text = "Повторить попытку")
-                }
+                RetryLoadDataButton { viewModel.loadNextProducts() }
             }
         }
     }
@@ -112,6 +96,7 @@ private fun MainScreenContent(
     items: () -> List<Product>,
     nextDataIsLoading: Boolean,
     isError: Boolean,
+    onClickedCard: (Int) -> Unit,
     onLoadNextData: () -> Unit
 ) {
     val listState = rememberLazyGridState()
@@ -130,17 +115,16 @@ private fun MainScreenContent(
                 item.id
             }
         ) {
-            ProductItem(it)
+            ProductItem(
+                productItem = it,
+                onClickedCard = { itemId ->
+                    onClickedCard(itemId)
+                }
+            )
         }
         item(span = { GridItemSpan(maxLineSpan) }) {
             if (isError) {
-                Button(
-                    modifier = Modifier.wrapContentSize(),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.DarkGray),
-                    onClick = { onLoadNextData() }
-                ) {
-                    Text(text = "Повторить попытку")
-                }
+                RetryLoadDataButton { onLoadNextData() }
             } else if (nextDataIsLoading) {
                 Box(
                     modifier = Modifier
@@ -166,9 +150,14 @@ private fun MainScreenContent(
 @OptIn(ExperimentalGlideComposeApi::class)
 @Composable
 private fun ProductItem(
-    productItem: Product
+    productItem: Product,
+    onClickedCard: (Int) -> Unit
 ) {
-    Column {
+    Column(
+        modifier = Modifier
+            .clip(RoundedCornerShape(8.dp))
+            .clickable { onClickedCard(productItem.id) }
+    ) {
         Card(
             modifier = Modifier
                 .height(160.dp),

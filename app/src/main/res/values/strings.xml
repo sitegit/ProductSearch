@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">Product Search</string>
+    <string name="retry_load">Повторить попытку</string>
+    <string name="load_error">Не удалось загрузить данные</string>
 </resources>

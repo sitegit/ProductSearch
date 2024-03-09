@@ -1,6 +1,7 @@
 package com.example.productsearch.data
 
 import com.example.productsearch.data.mapper.toEntities
+import com.example.productsearch.data.mapper.toEntity
 import com.example.productsearch.data.network.ApiService
 import com.example.productsearch.domain.ProductsRepository
 import com.example.productsearch.domain.Result
@@ -51,5 +52,9 @@ class ProductsRepositoryImpl @Inject constructor(
 
     override suspend fun loadNextData() {
         nextDataNeededEvents.emit(Unit)
+    }
+
+    override suspend fun getDetailProductInfo(itemId: Int): Product {
+        return apiService.getDetailProductInfo(itemId).toEntity()
     }
 }
