@@ -1,5 +1,8 @@
 package com.example.productsearch.domain.entity
 
+import androidx.compose.runtime.Immutable
+
+@Immutable
 data class Product(
     val id: Int,
     val title: String,

@@ -1,11 +1,13 @@
 package com.example.productsearch.presentation.screen.main
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.productsearch.domain.Result
 import com.example.productsearch.domain.entity.Product
 import com.example.productsearch.domain.entity.ProductList
 import com.example.productsearch.domain.usecase.GetProductsUseCase
+import com.example.productsearch.domain.usecase.LoadCategoryDataUseCase
 import com.example.productsearch.domain.usecase.LoadNextDataUseCase
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -19,7 +21,8 @@ import javax.inject.Inject
 
 class MainViewModel @Inject constructor(
     private val getProductsUseCase: GetProductsUseCase,
-    private val loadNextDataUseCase: LoadNextDataUseCase
+    private val loadNextDataUseCase: LoadNextDataUseCase,
+    private val loadCategoryDataUseCase: LoadCategoryDataUseCase
 ) : ViewModel() {
 
     private var totalItems = 0
@@ -57,6 +60,7 @@ class MainViewModel @Inject constructor(
                     currentPage = data.skip
                     val products = data.products
                     list.addAll(products)
+                    Log.i("MyTag", products.toString())
                     _errorState.value = false
                     ProductState.Products(products)
                 }
@@ -76,6 +80,13 @@ class MainViewModel @Inject constructor(
             )
             _errorState.value = false
             loadNextDataUseCase()
+        }
+    }
+
+    fun loadProductsByCategory(category: String) {
+        viewModelScope.launch {
+
+            loadCategoryDataUseCase(category)
         }
     }
 

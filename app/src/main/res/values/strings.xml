@@ -3,4 +3,7 @@
     <string name="retry_load">Try again</string>
     <string name="load_error">Failed to upload data</string>
     <string name="about_the_product">About the product</string>
+    <string name="search">Search</string>
+    <string name="empty_result">Empty result</string>
+    <string name="something_went_wrong">Something went wrong</string>
 </resources>

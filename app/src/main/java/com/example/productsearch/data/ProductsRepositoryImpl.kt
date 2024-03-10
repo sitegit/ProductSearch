@@ -1,5 +1,6 @@
 package com.example.productsearch.data
 
+import android.util.Log
 import com.example.productsearch.data.mapper.toEntities
 import com.example.productsearch.data.mapper.toEntity
 import com.example.productsearch.data.network.ApiService
@@ -21,6 +22,7 @@ class ProductsRepositoryImpl @Inject constructor(
 ) : ProductsRepository {
     private var currentPage = 0
     private val pageSize = 20
+    private var currentCategory: String? = null
 
     private val _products = mutableListOf<Product>()
     private val products: List<Product>
@@ -33,11 +35,16 @@ class ProductsRepositoryImpl @Inject constructor(
         nextDataNeededEvents.collect {
             if (products.isEmpty()) emit(Result.Loading)
             try {
-                val response = apiService.loadProducts(currentPage * pageSize, pageSize)
+                val response = if (currentCategory == null) {
+                    apiService.loadProducts(currentPage * pageSize, pageSize)
+                } else {
+                    apiService.loadCategory(currentCategory!!, currentPage * pageSize, pageSize)
+                }
                 _products.addAll(response.products.toEntities())
                 emit(Result.Success(ProductList(products, response.total, response.skip + pageSize)))
                 currentPage++
             } catch (e: Exception) {
+                Log.i("MyTag", e.message.toString())
                 emit(Result.Error(e))
             }
         }
@@ -50,11 +57,24 @@ class ProductsRepositoryImpl @Inject constructor(
             initialValue = Result.Initial
         )
 
+    override suspend fun loadProductsByCategory(category: String) {
+        currentCategory = category
+        currentPage = 0
+        _products.clear()
+        loadNextData()
+    }
+
     override suspend fun loadNextData() {
         nextDataNeededEvents.emit(Unit)
     }
 
     override suspend fun getDetailProductInfo(itemId: Int): Product {
         return apiService.getDetailProductInfo(itemId).toEntity()
+    }
+
+    override suspend fun searchProducts(name: String): ProductList {
+        val result = apiService.searchProducts(name).products.toEntities()
+        val filteredResult = result.filter { it.title.contains(name, ignoreCase = true) }
+        return ProductList(filteredResult, 0, 0)
     }
 }
