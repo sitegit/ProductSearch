@@ -26,7 +26,9 @@ class MainActivity : ComponentActivity() {
                         }
                     },
                     detailScreenContent = {
-                        DetailScreen(it)
+                        DetailScreen(it) {
+                            navHostController.popBackStack()
+                        }
                     }
                 )
             }

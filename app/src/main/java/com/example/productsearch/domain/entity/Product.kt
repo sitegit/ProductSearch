@@ -12,4 +12,9 @@ data class Product(
     val category: String,
     val thumbnail: String,
     val images: List<String>
-)
+) {
+    fun getPriceWithDiscount(): Int {
+        val discountAmount = price * (discountPercentage / 100)
+        return (price - discountAmount).toInt()
+    }
+}
