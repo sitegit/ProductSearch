@@ -1,3 +1,30 @@
 <resources>
     <string name="app_name">Product Search</string>
+    <string name="retry_load">Try again</string>
+    <string name="load_error">Failed to upload data</string>
+    <string name="about_the_product">About the product</string>
+    <string name="search">Search</string>
+    <string name="empty_result">Empty result</string>
+    <string name="something_went_wrong">Something went wrong</string>
+    <string name="all">All</string>
+    <string name="smartphones">Smartphones</string>
+    <string name="laptops">Laptops</string>
+    <string name="fragrances">Fragrances</string>
+    <string name="skincare">Skincare</string>
+    <string name="groceries">Groceries</string>
+    <string name="home_decoration">Home-decoration</string>
+    <string name="furniture">Furniture</string>
+    <string name="tops">Tops</string>
+    <string name="womens_dresses">Womens-dresses</string>
+    <string name="womens_shoes">Womens-shoes</string>
+    <string name="mens_shirts">Mens-shirts</string>
+    <string name="mens_shoes">Mens-shoes</string>
+    <string name="mens_watches">Mens-watches</string>
+    <string name="womens_watches">Womens-watches</string>
+    <string name="womens_bags">Womens-bags</string>
+    <string name="womens_jewellery">Womens-jewellery</string>
+    <string name="sunglasses">Sunglasses</string>
+    <string name="automotive">Automotive</string>
+    <string name="motorcycle">Motorcycle</string>
+    <string name="lighting">Lighting</string>
 </resources>
