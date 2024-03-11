@@ -2,7 +2,6 @@ package com.example.productsearch.presentation.screen.main
 
 import android.util.Log
 import android.widget.Toast
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -27,6 +26,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -43,7 +43,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -67,6 +66,7 @@ import com.example.productsearch.domain.entity.Product
 import com.example.productsearch.getApplicationComponent
 import com.example.productsearch.presentation.ui.theme.LightGrey
 import com.example.productsearch.presentation.ui.theme.RetryLoadDataButton
+import com.example.productsearch.presentation.ui.theme.Yellow
 
 @Composable
 fun MainScreen(
@@ -153,7 +153,12 @@ private fun MainScreenContent(
                     )
                 }
                 ProductState.Error -> {
-                    RetryLoadDataButton { onLoadNextData() }
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        RetryLoadDataButton { onLoadNextData() }
+                    }
                 }
             }
 
@@ -273,6 +278,23 @@ private fun ProductItem(
                 fontSize = 13.sp,
                 color = Color.Gray,
                 style = TextStyle(textDecoration = TextDecoration.LineThrough)
+            )
+        }
+        Row(
+            modifier = Modifier.padding(top = 4.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                modifier = Modifier.size(18.dp),
+                imageVector = Icons.Filled.Star,
+                contentDescription = null,
+                tint = Yellow
+            )
+            Spacer(modifier = Modifier.width(2.dp))
+            Text(
+                modifier = Modifier.padding(bottom = 1.dp),
+                text = productItem.getRoundedRating().toString(),
+                fontSize = 16.sp
             )
         }
     }

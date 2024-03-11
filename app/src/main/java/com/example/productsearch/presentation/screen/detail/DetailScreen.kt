@@ -24,7 +24,10 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.StarHalf
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.StarBorder
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -54,6 +57,7 @@ import com.example.productsearch.R
 import com.example.productsearch.domain.entity.Product
 import com.example.productsearch.getApplicationComponent
 import com.example.productsearch.presentation.ui.theme.RetryLoadDataButton
+import com.example.productsearch.presentation.ui.theme.Yellow
 import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.rememberPagerState
@@ -93,7 +97,9 @@ fun DetailScreen(
         when (val currentState = state.value) {
             DetailState.Error -> {
                 Column(
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(innerPadding),
                     verticalArrangement = Arrangement.Center,
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
@@ -131,13 +137,18 @@ private fun DetailContent(
             .fillMaxWidth()
             .verticalScroll(rememberScrollState())
             .padding(innerPadding)
+            .padding(bottom = 16.dp)
     ) {
         ImageSlider(images)
         Text(
             text = item.title,
             fontSize = 22.sp,
             fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(16.dp)
+            modifier = Modifier.padding(start = 16.dp, top = 8.dp, end = 16.dp, bottom = 8.dp)
+        )
+        StarRating(
+            modifier = Modifier.padding(start = 16.dp, bottom = 24.dp),
+            rating = item.getRoundedRating()
         )
         Row(Modifier.padding(horizontal = 16.dp)) {
             Text(
@@ -176,7 +187,7 @@ private fun DetailContent(
             color = Color.DarkGray,
             modifier = Modifier.padding(horizontal = 16.dp)
         )
-        Spacer(modifier = Modifier.height(4.dp))
+        Spacer(modifier = Modifier.height(8.dp))
         Text(
             text = "Product code: ${item.id}",
             fontSize = 16.sp,
@@ -185,13 +196,6 @@ private fun DetailContent(
         )
         Text(
             text = "Brand: ${item.brand}",
-            fontSize = 16.sp,
-            color = Color.DarkGray,
-            modifier = Modifier.padding(horizontal = 16.dp)
-        )
-
-        Text(
-            text = "Rating: ${item.rating}",
             fontSize = 16.sp,
             color = Color.DarkGray,
             modifier = Modifier.padding(horizontal = 16.dp)
@@ -205,6 +209,36 @@ private fun DetailContent(
     }
 }
 
+@Composable
+fun StarRating(
+    modifier: Modifier = Modifier,
+    rating: Float,
+    maxRating: Int = 5
+) {
+    Row(
+        modifier = modifier,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            modifier = Modifier.padding(end = 4.dp),
+            text = rating.toString(),
+            fontSize = 20.sp,
+            fontWeight = FontWeight.Bold
+        )
+        for (i in 1..maxRating) {
+            Icon(
+                imageVector = when {
+                    i <= rating -> Icons.Filled.Star
+                    i - rating < 1 -> Icons.AutoMirrored.Filled.StarHalf
+                    else -> Icons.Filled.StarBorder
+                },
+                contentDescription = null,
+                tint = Yellow,
+                modifier = Modifier.size(24.dp)
+            )
+        }
+    }
+}
 
 @OptIn(ExperimentalPagerApi::class)
 @Composable

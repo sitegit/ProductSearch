@@ -1,6 +1,5 @@
 package com.example.productsearch.presentation.screen.main
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.productsearch.domain.Result
@@ -9,7 +8,6 @@ import com.example.productsearch.domain.entity.ProductList
 import com.example.productsearch.domain.usecase.GetProductsUseCase
 import com.example.productsearch.domain.usecase.LoadCategoryDataUseCase
 import com.example.productsearch.domain.usecase.LoadNextDataUseCase
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
