@@ -22,7 +22,7 @@ class ProductsRepositoryImpl @Inject constructor(
 ) : ProductsRepository {
     private var currentPage = 0
     private val pageSize = 20
-    private var currentCategory: String? = null
+    private var currentCategory: String = ""
 
     private val _products = mutableListOf<Product>()
     private val products: List<Product>
@@ -35,16 +35,15 @@ class ProductsRepositoryImpl @Inject constructor(
         nextDataNeededEvents.collect {
             if (products.isEmpty()) emit(Result.Loading)
             try {
-                val response = if (currentCategory == null) {
+                val response = if (currentCategory.isEmpty()) {
                     apiService.loadProducts(currentPage * pageSize, pageSize)
                 } else {
-                    apiService.loadCategory(currentCategory!!, currentPage * pageSize, pageSize)
+                    apiService.loadCategory(currentCategory, currentPage * pageSize, pageSize)
                 }
                 _products.addAll(response.products.toEntities())
-                emit(Result.Success(ProductList(products, response.total, response.skip + pageSize)))
+                emit(Result.Success(ProductList(products, response.total)))
                 currentPage++
             } catch (e: Exception) {
-                Log.i("MyTag", e.message.toString())
                 emit(Result.Error(e))
             }
         }
@@ -75,6 +74,6 @@ class ProductsRepositoryImpl @Inject constructor(
     override suspend fun searchProducts(name: String): ProductList {
         val result = apiService.searchProducts(name).products.toEntities()
         val filteredResult = result.filter { it.title.contains(name, ignoreCase = true) }
-        return ProductList(filteredResult, 0, 0)
+        return ProductList(filteredResult, 0)
     }
 }

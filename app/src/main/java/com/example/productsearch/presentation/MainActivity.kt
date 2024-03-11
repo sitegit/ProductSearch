@@ -23,26 +23,22 @@ class MainActivity : ComponentActivity() {
                     navHostController = navHostController,
                     mainScreenContent = {
                         MainScreen(
-                            onClickedCard = { id, flag ->
-                                navHostController.navigate(Screen.Detail.getRouteWithArgs(id, flag))
+                            onClickedCard = { id ->
+                                navHostController.navigate(Screen.Detail.getRouteWithArgs(id))
                             },
                             onSearchProduct = { navHostController.navigate(Screen.Search.route) }
                         )
                     },
-                    detailScreenContent = { id, flag ->
-                        DetailScreen(id, flag) {
-                            if (it) {
-                                navHostController.popBackStack(route = Screen.Main.route, inclusive = false)
-                            } else {
-                                navHostController.popBackStack()
-                            }
+                    detailScreenContent = { id ->
+                        DetailScreen(id) {
+                            navHostController.popBackStack(route = Screen.Main.route, inclusive = false)
                         }
                     },
                     searchScreenContent = {
                         SearchScreen(
                             onClickBack = { navHostController.popBackStack() },
-                            onProductClick = { id, flag ->
-                                navHostController.navigate(Screen.Detail.getRouteWithArgs(id, flag))
+                            onProductClick = { id ->
+                                navHostController.navigate(Screen.Detail.getRouteWithArgs(id))
                             }
                         )
                     }

@@ -1,6 +1,8 @@
 package com.example.productsearch.presentation.screen.detail
 
+import android.util.Log
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -8,12 +10,17 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -28,6 +35,8 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -40,19 +49,20 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
-import com.bumptech.glide.integration.compose.GlideImage
+import coil.compose.rememberAsyncImagePainter
 import com.example.productsearch.R
 import com.example.productsearch.domain.entity.Product
 import com.example.productsearch.getApplicationComponent
 import com.example.productsearch.presentation.ui.theme.RetryLoadDataButton
+import com.google.accompanist.pager.ExperimentalPagerApi
+import com.google.accompanist.pager.HorizontalPager
+import com.google.accompanist.pager.rememberPagerState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DetailScreen(
     itemId: Int,
-    isFlag: Boolean,
-    onBackPressed: (Boolean) -> Unit
+    onBackPressed: () -> Unit
 ) {
     val component = getApplicationComponent()
     val viewModel: DetailViewModel = viewModel(factory = component.getViewModelFactory())
@@ -69,7 +79,7 @@ fun DetailScreen(
                 title = {},
                 navigationIcon = {
                     IconButton(
-                        onClick = { onBackPressed(isFlag) }
+                        onClick = { onBackPressed() }
                     ) {
                         Icon(
                             imageVector = Icons.Filled.ArrowBack,
@@ -106,26 +116,23 @@ fun DetailScreen(
             }
         }
     }
-    BackHandler(onBack = { onBackPressed(isFlag) })
+    BackHandler(onBack = { onBackPressed() })
 }
 
-@OptIn(ExperimentalGlideComposeApi::class)
 @Composable
 private fun DetailContent(
     item: Product,
     innerPadding: PaddingValues
 ) {
+    val images = item.images
+    Log.i("MyTag", images.toString())
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .verticalScroll(rememberScrollState())
             .padding(innerPadding)
     ) {
-        GlideImage(
-            model = item.thumbnail,
-            contentScale = ContentScale.FillWidth,
-            contentDescription = null
-        )
+        ImageSlider(images)
         Text(
             text = item.title,
             fontSize = 22.sp,
@@ -169,33 +176,103 @@ private fun DetailContent(
             color = Color.DarkGray,
             modifier = Modifier.padding(horizontal = 16.dp)
         )
-        Spacer(modifier = Modifier.height(3.dp))
+        Spacer(modifier = Modifier.height(4.dp))
         Text(
             text = "Product code: ${item.id}",
             fontSize = 16.sp,
-            color = Color.Gray,
+            color = Color.DarkGray,
             modifier = Modifier.padding(horizontal = 16.dp)
         )
-        Spacer(modifier = Modifier.height(3.dp))
         Text(
             text = "Brand: ${item.brand}",
             fontSize = 16.sp,
-            color = Color.Gray,
+            color = Color.DarkGray,
             modifier = Modifier.padding(horizontal = 16.dp)
         )
-        Spacer(modifier = Modifier.height(3.dp))
+
         Text(
             text = "Rating: ${item.rating}",
             fontSize = 16.sp,
-            color = Color.Gray,
+            color = Color.DarkGray,
             modifier = Modifier.padding(horizontal = 16.dp)
         )
-        Spacer(modifier = Modifier.height(3.dp))
         Text(
             text = "Left in stock: ${item.stock}",
             fontSize = 16.sp,
-            color = Color.Gray,
+            color = Color.DarkGray,
             modifier = Modifier.padding(horizontal = 16.dp)
         )
     }
 }
+
+
+@OptIn(ExperimentalPagerApi::class)
+@Composable
+fun ImageSlider(images: List<String>) {
+    val state = rememberPagerState()
+    val imageUrl = remember { mutableStateOf("") }
+
+    HorizontalPager(
+        state = state,
+        count = images.size,
+        modifier = Modifier
+            .fillMaxHeight()
+            .height(250.dp)
+    ) { page ->
+        imageUrl.value = images[page]
+
+        Box(contentAlignment = Alignment.BottomCenter) {
+            val painter = rememberAsyncImagePainter(model = imageUrl.value)
+
+            Image(
+                painter = painter,
+                contentDescription = "",
+                modifier = Modifier
+                    .fillMaxSize(),
+                contentScale = ContentScale.Fit
+            )
+        }
+    }
+    Spacer(modifier = Modifier.height(8.dp))
+    DotsIndicator(
+        totalDots = images.size,
+        selectedIndex = state.currentPage
+    )
+}
+
+@Composable
+fun DotsIndicator(
+    totalDots: Int,
+    selectedIndex: Int
+) {
+
+    LazyRow(
+        modifier = Modifier
+            .fillMaxWidth()
+            .wrapContentHeight(), horizontalArrangement = Arrangement.Center
+    ) {
+
+        items(totalDots) { index ->
+            if (index == selectedIndex) {
+                Box(
+                    modifier = Modifier
+                        .size(10.dp)
+                        .clip(CircleShape)
+                        .background(color = Color.DarkGray)
+                )
+            } else {
+                Box(
+                    modifier = Modifier
+                        .size(10.dp)
+                        .clip(CircleShape)
+                        .background(color = Color.LightGray)
+                )
+            }
+
+            if (index != totalDots - 1) {
+                Spacer(modifier = Modifier.padding(horizontal = 2.dp))
+            }
+        }
+    }
+}
+

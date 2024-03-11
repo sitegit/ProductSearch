@@ -10,7 +10,7 @@ class SearchProductsByNameUseCase @Inject constructor(
 ) {
 
     suspend operator fun invoke(name: String): Result {
-        if (name.isEmpty()) return Result.Success(ProductList(listOf(), 0, 0))
+        if (name.isEmpty()) return Result.Success(ProductList(listOf(), 0))
         return try {
             Result.Success(repository.searchProducts(name))
         } catch (e: Exception) {

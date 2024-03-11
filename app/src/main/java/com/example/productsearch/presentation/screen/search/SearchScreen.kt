@@ -47,7 +47,7 @@ import com.example.productsearch.getApplicationComponent
 @Composable
 fun SearchScreen(
     onClickBack: () -> Unit,
-    onProductClick: (Int, Boolean) -> Unit,
+    onProductClick: (Int) -> Unit,
 ) {
     val component = getApplicationComponent()
     val viewModel: SearchViewModel = viewModel(factory = component.getViewModelFactory())
@@ -140,7 +140,7 @@ fun SearchScreen(
 @Composable
 private fun ProductsCard(
     product: Product,
-    onProductClick: (Int, Boolean) -> Unit
+    onProductClick: (Int) -> Unit
 ) {
     Card(
         modifier = Modifier.fillMaxWidth()
@@ -148,7 +148,7 @@ private fun ProductsCard(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .clickable { onProductClick(product.id, true) }
+                .clickable { onProductClick(product.id) }
                 .padding(
                     vertical = 8.dp,
                     horizontal = 16.dp

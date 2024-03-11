@@ -9,8 +9,8 @@ sealed class Screen(
     data object Detail : Screen(ROUTE_DETAIL) {
         private const val ROUTE_FOR_ARGS = "detail"
 
-        fun getRouteWithArgs(itemId: Int, isFlag: Boolean): String {
-            return "$ROUTE_FOR_ARGS/$itemId/$isFlag"
+        fun getRouteWithArgs(itemId: Int): String {
+            return "$ROUTE_FOR_ARGS/$itemId"
         }
     }
 
@@ -18,10 +18,9 @@ sealed class Screen(
 
     companion object {
         const val KEY_DETAIL_ID = "key_product_id"
-        const val KEY_DETAIL_FLAG = "key_product_flag"
 
         const val ROUTE_MAIN = "main"
-        const val ROUTE_DETAIL = "detail/{$KEY_DETAIL_ID}/{$KEY_DETAIL_FLAG}"
+        const val ROUTE_DETAIL = "detail/{$KEY_DETAIL_ID}"
         const val ROUTE_SEARCH = "search"
     }
 }

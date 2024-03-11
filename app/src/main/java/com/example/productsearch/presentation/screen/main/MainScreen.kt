@@ -1,5 +1,6 @@
 package com.example.productsearch.presentation.screen.main
 
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -20,7 +21,7 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -42,8 +43,9 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -68,7 +70,7 @@ import com.example.productsearch.presentation.ui.theme.RetryLoadDataButton
 
 @Composable
 fun MainScreen(
-    onClickedCard: (Int, Boolean) -> Unit,
+    onClickedCard: (Int) -> Unit,
     onSearchProduct: () -> Unit,
 ) {
     val component = getApplicationComponent()
@@ -83,51 +85,26 @@ fun MainScreen(
         }
     }
 
-    when (val currentState = state.value) {
-        ProductState.Initial -> {}
-        ProductState.Loading -> {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator(color = Color.DarkGray)
-            }
-        }
-        is ProductState.Products -> {
-            MainScreenContent(
-                items = { currentState.products },
-                nextDataIsLoading = currentState.nextDataIsLoading,
-                isError = isError,
-                onClickedCard = { onClickedCard(it, false) },
-                onSearchProduct = onSearchProduct,
-                onLoadNextData = { viewModel.loadNextProducts() },
-                onCategorySelected = { viewModel.loadProductsByCategory(it) }
-            )
-        }
-
-        ProductState.Error -> {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                RetryLoadDataButton { viewModel.loadNextProducts() }
-            }
-        }
-    }
+    MainScreenContent(
+        state = state.value,
+        isError = isError,
+        onClickedCard = { onClickedCard(it) },
+        onSearchProduct = onSearchProduct,
+        onLoadNextData = { viewModel.loadNextProducts() },
+        onCategorySelected = { viewModel.loadProductsByCategory(it) }
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun MainScreenContent(
-    items: () -> List<Product>,
-    nextDataIsLoading: Boolean,
+    state: ProductState,
     isError: Boolean,
     onClickedCard: (Int) -> Unit,
     onSearchProduct: () -> Unit,
     onLoadNextData: () -> Unit,
     onCategorySelected: (String) -> Unit
 ) {
-    val listState = rememberLazyGridState()
 
     Scaffold(
         topBar = {
@@ -146,50 +123,96 @@ private fun MainScreenContent(
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-            FilterCategoryChip(onCategorySelected = onCategorySelected)
-            LazyVerticalGrid(
-                state = listState,
-                modifier = Modifier
-                    .fillMaxSize(),
-                columns = GridCells.Fixed(2),
-                contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 6.dp, bottom = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(24.dp),
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                items(
-                    items = items(),
-                    key = { item ->
-                        item.id
+            var selected by rememberSaveable { mutableStateOf("All") }
+
+            FilterCategoryChip(
+                categoryStr = selected,
+                onCategorySelected = {
+                    selected = it
+                    onCategorySelected(if (it == "All") "" else it)
+                }
+            )
+
+            when (state) {
+                ProductState.Initial -> {}
+                ProductState.Loading -> {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(color = Color.DarkGray)
                     }
-                ) {
-                    ProductItem(
-                        productItem = it,
-                        onClickedCard = { itemId ->
-                            onClickedCard(itemId)
-                        }
+                }
+                is ProductState.Products -> {
+                    ProductsGrid(
+                        products = state.products,
+                        onClickedCard = onClickedCard,
+                        nextDataIsLoading = state.nextDataIsLoading,
+                        isError = isError,
+                        onLoadNextData = onLoadNextData
                     )
                 }
-                item(span = { GridItemSpan(maxLineSpan) }) {
-                    if (isError) {
-                        RetryLoadDataButton { onLoadNextData() }
-                    } else if (nextDataIsLoading) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .wrapContentHeight()
-                                .padding(16.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            CircularProgressIndicator(
-                                color = Color.DarkGray,
-                                modifier = Modifier.size(34.dp)
-                            )
-                        }
-                    } else {
-                        SideEffect {
-                            onLoadNextData()
-                        }
-                    }
+                ProductState.Error -> {
+                    RetryLoadDataButton { onLoadNextData() }
+                }
+            }
+
+        }
+    }
+}
+
+@Composable
+private fun ProductsGrid(
+    products: List<Product>,
+    onClickedCard: (Int) -> Unit,
+    nextDataIsLoading: Boolean,
+    isError: Boolean,
+    onLoadNextData: () -> Unit
+) {
+    val listState = rememberLazyGridState()
+
+    LazyVerticalGrid(
+        state = listState,
+        modifier = Modifier
+            .fillMaxSize(),
+        columns = GridCells.Fixed(2),
+        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 6.dp, bottom = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(24.dp),
+        horizontalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        itemsIndexed(
+            items = products,
+            key = { _, item ->
+                item.id
+            }
+        ) { _, item ->
+            ProductItem(
+                productItem = item,
+                onClickedCard = { itemId ->
+                    onClickedCard(itemId)
+                }
+            )
+        }
+        item(span = { GridItemSpan(maxLineSpan) }) {
+            if (isError) {
+                RetryLoadDataButton { onLoadNextData() }
+            } else if (nextDataIsLoading) {
+                Log.i("MyTag", "nextDataIsLoading")
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .wrapContentHeight()
+                        .padding(16.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(
+                        color = Color.DarkGray,
+                        modifier = Modifier.size(34.dp)
+                    )
+                }
+            } else {
+                SideEffect {
+                    onLoadNextData()
                 }
             }
         }
@@ -237,27 +260,17 @@ private fun ProductItem(
             overflow = TextOverflow.Ellipsis
         )
         Spacer(modifier = Modifier.height(4.dp))
-        Row() {
+        Row {
             Text(
                 text = "${productItem.getPriceWithDiscount()}$",
                 fontSize = 16.sp,
                 color = Color.Black,
                 fontWeight = FontWeight.Bold,
             )
-            Spacer(modifier = Modifier.width(4.dp))
-            Text(
-                text = "-${productItem.discountPercentage}%",
-                color = Color.White,
-                fontSize = 8.sp,
-                modifier = Modifier
-                    .clip(RoundedCornerShape(4.dp))
-                    .background(Color.Red)
-                    .padding(3.dp)
-            )
-            Spacer(modifier = Modifier.width(8.dp))
+            Spacer(modifier = Modifier.width(6.dp))
             Text(
                 text = "${productItem.price.toInt()}$",
-                fontSize = 12.sp,
+                fontSize = 13.sp,
                 color = Color.Gray,
                 style = TextStyle(textDecoration = TextDecoration.LineThrough)
             )
@@ -268,11 +281,33 @@ private fun ProductItem(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun FilterCategoryChip(
+    categoryStr: String,
     onCategorySelected: (String) -> Unit
 ) {
-    var selected by remember { mutableStateOf("All") }
     val scrollState = rememberScrollState()
-    val categories = listOf("All", "smartphones", "3333333", "444444444444444")
+    val categories = listOf(
+        stringResource(R.string.all),
+        stringResource(R.string.smartphones),
+        stringResource(R.string.laptops),
+        stringResource(R.string.fragrances),
+        stringResource(R.string.skincare),
+        stringResource(R.string.groceries),
+        stringResource(R.string.home_decoration),
+        stringResource(R.string.furniture),
+        stringResource(R.string.tops),
+        stringResource(R.string.womens_dresses),
+        stringResource(R.string.womens_shoes),
+        stringResource(R.string.mens_shirts),
+        stringResource(R.string.mens_shoes),
+        stringResource(R.string.mens_watches),
+        stringResource(R.string.womens_watches),
+        stringResource(R.string.womens_bags),
+        stringResource(R.string.womens_jewellery),
+        stringResource(R.string.sunglasses),
+        stringResource(R.string.automotive),
+        stringResource(R.string.motorcycle),
+        stringResource(R.string.lighting)
+    )
 
     Row(
         modifier = Modifier
@@ -282,11 +317,11 @@ private fun FilterCategoryChip(
     ) {
         Spacer(modifier = Modifier.width(16.dp))
 
-        categories.forEach { category ->
+        categories.forEach{ category ->
             FilterChip(
                 onClick = { onCategorySelected(category) },
                 label = { Text(category) },
-                selected = selected == category,
+                selected = categoryStr == category,
                 colors = FilterChipDefaults.filterChipColors(
                     selectedContainerColor = Color.DarkGray,
                     selectedLabelColor = Color.White

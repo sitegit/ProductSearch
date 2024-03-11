@@ -9,6 +9,7 @@ import com.example.productsearch.domain.entity.ProductList
 import com.example.productsearch.domain.usecase.GetProductsUseCase
 import com.example.productsearch.domain.usecase.LoadCategoryDataUseCase
 import com.example.productsearch.domain.usecase.LoadNextDataUseCase
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -26,7 +27,7 @@ class MainViewModel @Inject constructor(
 ) : ViewModel() {
 
     private var totalItems = 0
-    private var currentPage = 0
+    private var currentItems = 0
     private val loadNextDataFlow = MutableSharedFlow<ProductState>()
     private val list = mutableListOf<Product>()
 
@@ -41,7 +42,7 @@ class MainViewModel @Inject constructor(
     val screenState = productsFlow
         .map {
             when (it) {
-                is Result.Initial -> {}
+                is Result.Initial -> ProductState.Initial
                 is Result.Loading -> {
                     ProductState.Loading
                 }
@@ -56,11 +57,10 @@ class MainViewModel @Inject constructor(
                 }
                 is Result.Success<*> -> {
                     val data = it.data as ProductList
-                    totalItems = data.total
-                    currentPage = data.skip
                     val products = data.products
+                    totalItems = data.total
+                    currentItems = products.size
                     list.addAll(products)
-                    Log.i("MyTag", products.toString())
                     _errorState.value = false
                     ProductState.Products(products)
                 }
@@ -69,7 +69,7 @@ class MainViewModel @Inject constructor(
         .mergeWith(loadNextDataFlow)
 
     fun loadNextProducts() {
-        if (currentPage == totalItems && list.isNotEmpty()) return
+        if (currentItems == totalItems && list.isNotEmpty()) return
 
         viewModelScope.launch {
             loadNextDataFlow.emit(
@@ -85,7 +85,7 @@ class MainViewModel @Inject constructor(
 
     fun loadProductsByCategory(category: String) {
         viewModelScope.launch {
-
+            list.clear()
             loadCategoryDataUseCase(category)
         }
     }
